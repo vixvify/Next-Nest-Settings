@@ -46,6 +46,10 @@ mkdir -p packages/shared
 app.enableCors({ origin: 'http://localhost:3000' });
 app.setGlobalPrefix('api');
 
+nest g module data
+nest g controller data
+nest g service data
+
 
 import { Prompt } from 'next/font/google'
 
