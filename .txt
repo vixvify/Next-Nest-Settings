@@ -44,6 +44,7 @@ mkdir -p packages/shared
 }
 
 app.enableCors({ origin: 'http://localhost:3000' });
+app.setGlobalPrefix('api');
 
 
 import { Prompt } from 'next/font/google'
@@ -66,7 +67,7 @@ body {
 npm install prisma --save-dev
 npm install @prisma/client
 
-npx prisma init --datasource-provider mongodb
+npx prisma init 
 จะได้โฟลเดอร์ prisma/ และไฟล์ .env
 
 แก้ .env ให้ใส่ MongoDB URI ของคุณ เพิ่ม /ชื่อdb หลัง.net
