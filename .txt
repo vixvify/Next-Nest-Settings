@@ -1,0 +1,199 @@
+npm init -y
+npm install
+npm install turbo --global
+npm i -g @nestjs/cli
+"packageManager": "npm@10.9.2"
+npx turbo init
+mkdir -p apps/web
+npx create-next-app@latest .
+mkdir -p apps/api
+nest new .
+mkdir -p packages/shared
+
+{
+  "name": "my-app",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "turbo": "latest"
+  }
+}
+{
+  "scripts": {
+    "dev": "turbo run dev --parallel"
+  }
+}
+"scripts": {
+  "dev": "nest start --watch"
+}
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**"]
+    }
+  }
+}
+
+app.enableCors({ origin: 'http://localhost:3000' });
+
+
+import { Prompt } from 'next/font/google'
+
+const kanit = Kanit({
+  subsets: ['thai', 'latin'],
+  weight: ['400', '600'],  // เลือกน้ำหนักฟอนต์
+  variable: '--font-kanit', // ตั้งชื่อ CSS variable
+})
+
+<html lang="th" className={kanit.className}>
+      <body>{children}</body>
+</html>
+
+// glocal.css
+body {
+  font-family: var(--font-kanit);
+}
+
+npm install prisma --save-dev
+npm install @prisma/client
+
+npx prisma init --datasource-provider mongodb
+จะได้โฟลเดอร์ prisma/ และไฟล์ .env
+
+แก้ .env ให้ใส่ MongoDB URI ของคุณ เพิ่ม /ชื่อdb หลัง.net
+
+สร้าง schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  name  String
+  email String @unique
+}
+
+npx prisma generate
+
+npm install bcryptjs
+npm install next-auth
+
+ /app/api/auth/[...nextauth]/route.js
+
+import NextAuth from 'next-auth';
+import { JWT } from 'next-auth/jwt';
+import { NextAuthOptions } from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import { PrismaClient } from '@/generated/prisma';
+import bcrypt from 'bcryptjs';
+import GoogleProvider from 'next-auth/providers/google';
+
+const prisma = new PrismaClient();
+
+export const authOptions: NextAuthOptions = {
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+    CredentialsProvider({
+      name: 'Credentials',
+      credentials: {},
+      async authorize(credentials) {
+        const { username, password } = credentials as {
+          username: string;
+          password: string;
+        };
+
+        const user = await prisma.user.findUnique({
+          where: { username },
+        });
+
+        if (!user) return null;
+
+        const isMatch = user.password
+          ? await bcrypt.compare(password, user.password)
+          : false;
+        if (!isMatch) return null;
+
+        return { id: user.id, username: user.username, email: user.email };
+      },
+    }),
+  ],
+  session: {
+    strategy: 'jwt',
+  },
+  callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === 'google') {
+        let existingUser = await prisma.user.findUnique({
+          where: { email: user.email! },
+        });
+
+        if (!existingUser) {
+          await prisma.user.create({
+            data: {
+              username: user.name ?? user.email!.split('@')[0],
+              password: null,
+              email: user.email as string,
+            },
+          });
+        }
+      }
+      return true;
+    },
+    async jwt({ token, user }: { token: JWT; user: any }) {
+      if (user) {
+        token.id = user.id;
+        token.username = user.username;
+        token.email = user.email;
+      }
+      return token;
+    },
+    async session({ session, token }: { session: any; token: JWT }) {
+      if (token) {
+        session.user = {
+          id: token.id,
+          name: token.username,
+          email: token.email,
+        };
+      }
+      return session;
+    },
+  },
+  pages: {
+    signIn: '/login',
+  },
+};
+
+const handler = NextAuth(authOptions);
+export { handler as GET, handler as POST };
+
+//client
+import { signIn } from "next-auth/react";
+
+  const res = await signIn("credentials", {
+      username,
+      password,
+      redirect: false,
+    });
+
+    if (res.ok && !res.error) {
+      router.push("/dashboard"); // ไปหน้าหลัง login
+    } else {
+      alert("Login failed");
+    }
