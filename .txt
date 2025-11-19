@@ -27,7 +27,7 @@ mkdir -p packages/shared
   }
 }
 "scripts": {
-  "dev": "nest start --watch"
+  "start:dev": "nest start --watch --build"
 }
 {
   "$schema": "https://turbo.build/schema.json",
