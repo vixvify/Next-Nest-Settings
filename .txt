@@ -1,54 +1,68 @@
-npm init -y
-npm install
-npm install turbo --global
+mkdir fullstack-app
+npx create-next-app@latest client --typescript
 npm i -g @nestjs/cli
-"packageManager": "npm@10.9.2"
-npx turbo init
-mkdir -p apps/web
-npx create-next-app@latest .
-mkdir -p apps/api
-nest new .
-mkdir -p packages/shared
+nest new server
 
-{
-  "name": "my-app",
-  "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
-  "devDependencies": {
-    "turbo": "latest"
-  }
-}
-{
-  "scripts": {
-    "dev": "turbo run dev --parallel"
-  }
-}
-"scripts": {
-  "start:dev": "nest start --watch --build"
-}
-{
-  "$schema": "https://turbo.build/schema.json",
-  "tasks": {
-    "dev": {
-      "cache": false,
-      "persistent": true
-    },
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**"]
-    }
-  }
+cd server
+npm install prisma@6 @prisma/client@6 @prisma/config@6
+npx prisma init
+postgresql://postgres.ujnrkzoqhmoocrzjwcxr:[YOUR-PASSWORD]@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require
+อย่าลืม ?sslmode=require ต่อท้าย
+
+generator client {
+  provider = "prisma-client-js"
 }
 
-app.enableCors({ origin: 'http://localhost:3000' });
-app.setGlobalPrefix('api');
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
+
+npx prisma generate
+npx prisma migrate dev --name init
+nest g module prisma
+nest g service prisma
+
+prisma.service.ts:
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
+
+@Injectable()
+export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+  async onModuleInit() {
+    await this.$connect();
+  }
+
+  async onModuleDestroy() {
+    await this.$disconnect();
+  }
+}
+
+module:
+import { Module } from '@nestjs/common';
+import { PrismaService } from './prisma.service';
+
+@Module({
+  providers: [PrismaService],
+  exports: [PrismaService],
+})
+export class PrismaModule {}
 
 nest g module data
 nest g controller data
 nest g service data
+
+Remove-Item -Recurse -Force "client\.git"
+Remove-Item -Recurse -Force "server\.git"
+
 
 
 import { Prompt } from 'next/font/google'
@@ -67,33 +81,6 @@ const kanit = Kanit({
 body {
   font-family: var(--font-kanit);
 }
-
-npm install prisma --save-dev
-npm install @prisma/client
-
-npx prisma init 
-จะได้โฟลเดอร์ prisma/ และไฟล์ .env
-
-แก้ .env ให้ใส่ MongoDB URI ของคุณ เพิ่ม /ชื่อdb หลัง.net
-
-สร้าง schema
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "mongodb"
-  url      = env("DATABASE_URL")
-}
-
-model User {
-  id    String @id @default(auto()) @map("_id") @db.ObjectId
-  name  String
-  email String @unique
-}
-$env:DATABASE_URL="postgresql://postgres.ujnrkzoqhmoocrzjwcxr:blognextnest2550@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
-npx prisma generate
-npx prisma migrate dev --name init
 
 npm install bcryptjs
 npm install next-auth
