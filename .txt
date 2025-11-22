@@ -94,6 +94,9 @@ npm install -D @types/passport-jwt @types/bcrypt
 npm install uuid
 npm install --save-dev @types/uuid
 
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+
 npm install next-auth
 npm install react-icons --save
 
