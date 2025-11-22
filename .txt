@@ -195,7 +195,7 @@ export const authOptions: NextAuthOptions = {
       if (token) {
         session.user = {
           id: token.id,
-          name: token.username,
+          username: token.username,
           email: token.email,
         };
         session.accessToken = token.accessToken;
