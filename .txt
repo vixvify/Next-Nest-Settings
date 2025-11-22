@@ -141,66 +141,45 @@ body {
 
  /app/api/auth/[...nextauth]/route.js
 
-import NextAuth from 'next-auth';
-import { JWT } from 'next-auth/jwt';
-import { NextAuthOptions } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import { PrismaClient } from '@/generated/prisma';
-import bcrypt from 'bcryptjs';
-import GoogleProvider from 'next-auth/providers/google';
-
-const prisma = new PrismaClient();
+import NextAuth from "next-auth";
+import { JWT } from "next-auth/jwt";
+import { NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import axios from "axios";
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
     CredentialsProvider({
-      name: 'Credentials',
+      name: "Credentials",
       credentials: {},
       async authorize(credentials) {
-        const { username, password } = credentials as {
-          username: string;
+        const { email, password } = credentials as {
+          email: string;
           password: string;
         };
-
-        const user = await prisma.user.findUnique({
-          where: { username },
-        });
-
-        if (!user) return null;
-
-        const isMatch = user.password
-          ? await bcrypt.compare(password, user.password)
-          : false;
-        if (!isMatch) return null;
-
-        return { id: user.id, username: user.username, email: user.email };
+        try {
+          const user = await axios.post(
+            `${process.env.NEXT_PUBLIC_API}/auth/login`,
+            { email, password }
+          );
+          const foundUser = user.data.user;
+          return {
+            id: foundUser.id,
+            username: foundUser.username,
+            email: foundUser.email,
+            accesstoken: user.data.token,
+          };
+        } catch (err) {
+          return null;
+        }
       },
     }),
   ],
   session: {
-    strategy: 'jwt',
+    strategy: "jwt",
   },
   callbacks: {
-    async signIn({ user, account }) {
-      if (account?.provider === 'google') {
-        let existingUser = await prisma.user.findUnique({
-          where: { email: user.email! },
-        });
-
-        if (!existingUser) {
-          await prisma.user.create({
-            data: {
-              username: user.name ?? user.email!.split('@')[0],
-              password: null,
-              email: user.email as string,
-            },
-          });
-        }
-      }
+    async signIn({ user, account, credentials }) {
       return true;
     },
     async jwt({ token, user }: { token: JWT; user: any }) {
@@ -208,6 +187,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.username = user.username;
         token.email = user.email;
+        token.accesstoken = user.accesstoken;
       }
       return token;
     },
@@ -218,17 +198,19 @@ export const authOptions: NextAuthOptions = {
           name: token.username,
           email: token.email,
         };
+        session.accessToken = token.accessToken;
       }
       return session;
     },
   },
   pages: {
-    signIn: '/login',
+    signIn: "/login",
   },
 };
 
 const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
+
 
 //client
 import { signIn } from "next-auth/react";
