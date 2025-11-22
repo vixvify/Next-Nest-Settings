@@ -244,3 +244,6 @@ import { signIn } from "next-auth/react";
     } else {
       alert("Login failed");
     }
+
+import { SessionProvider } from "next-auth/react";
+const { data: session } = useSession();
