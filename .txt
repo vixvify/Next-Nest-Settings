@@ -97,6 +97,27 @@ npm install --save-dev @types/uuid
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
+auth.module.ts
+import { Module } from '@nestjs/common';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { UserModule } from 'src/user/user.module';
+import { JwtModule } from '@nestjs/jwt/dist';
+
+@Module({
+  imports: [
+    UserModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '1d' },
+    }),
+  ],
+  controllers: [AuthController],
+  providers: [AuthService],
+})
+export class AuthModule {}
+
+
 npm install next-auth
 npm install react-icons --save
 
