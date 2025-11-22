@@ -89,6 +89,13 @@ nest g service data
 Remove-Item -Recurse -Force "client\.git"
 Remove-Item -Recurse -Force "server\.git"
 
+npm install @nestjs/jwt @nestjs/passport passport bcrypt
+npm install -D @types/passport-jwt @types/bcrypt
+npm install uuid
+npm install --save-dev @types/uuid
+
+npm install next-auth
+npm install react-icons --save
 
 
 import { Prompt } from 'next/font/google'
@@ -107,9 +114,6 @@ const kanit = Kanit({
 body {
   font-family: var(--font-kanit);
 }
-
-npm install bcryptjs
-npm install next-auth
 
  /app/api/auth/[...nextauth]/route.js
 
