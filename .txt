@@ -179,7 +179,7 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    async signIn({ user, account, credentials }) {
+    async signIn() {
       return true;
     },
     async jwt({ token, user }: { token: JWT; user: any }) {
@@ -198,7 +198,7 @@ export const authOptions: NextAuthOptions = {
           username: token.username,
           email: token.email,
         };
-        session.accessToken = token.accessToken;
+        session.accesstoken = token.accesstoken;
       }
       return session;
     },
@@ -210,6 +210,7 @@ export const authOptions: NextAuthOptions = {
 
 const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
+
 
 
 //client
@@ -231,15 +232,33 @@ import { SessionProvider } from "next-auth/react";
 const { data: session } = useSession();
 
 next-auth.d.ts
-import NextAuth from "next-auth";
+import NextAuth, { DefaultSession } from "next-auth";
 
 declare module "next-auth" {
   interface Session {
     user: {
       id: string;
-      name?: string | null;
-      email?: string | null;
-    };
+      username: string | null;
+      email: string | null;
+    } & DefaultSession["user"];
+    accesstoken: string;
+  }
+
+  interface User {
+    id: string;
+    username: string | null;
+    email: string | null;
+    accesstoken: string;
   }
 }
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    id: string;
+    username: string | null;
+    email: string | null;
+    accesstoken: string;
+  }
+}
+
 
