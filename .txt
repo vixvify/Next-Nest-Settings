@@ -120,6 +120,7 @@ export class UserModule {}
 
 npm install next-auth
 npm install react-icons --save
+npm install @tailwindcss/line-clamp
 
 
 import { Prompt } from 'next/font/google'
